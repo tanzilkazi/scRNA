@@ -82,9 +82,8 @@ adjustedRandIndex(cls.truth, initCls)
 library(cluster)
 clusplot(t(sim.selected),clust$cluster,color=TRUE,share=TRUE,lines=0)
 
-
-recorder <-data.frame(matrix(ncol=6,nrow=0))
 colnames(recorder) <- c("ntree","mtry","ARI.model.mean","ARI.model.sd","ARI.truth","binom")
+recorder <-data.frame(matrix(ncol=6,nrow=0))
 
 ntree_min = 50
 ntree_max = 550

@@ -19,22 +19,20 @@ scAdaSampling <- function(data, label, seed) {
     prob.mat <- predict(model, newdata=t(data), type="prob")
     X <- c()
     Y <- c()
-    for(j in 1:ncol(prob.mat)) {
-      voteClass <- prob.mat[label==names(table(label))[j],]
-      idx <- sample(1:nrow(voteClass), size=nrow(voteClass), replace = TRUE, prob=voteClass[,j])
+    for(j in 1:ncol(prob.mat)) {#j = soft label class
+      voteClass <- prob.mat[label==names(table(label))[j],] # select the cells ONLY from class
+      idx <- sample(1:nrow(voteClass), size=nrow(voteClass), replace = TRUE, prob=voteClass[,j]) # weighted sampling with replacement
       
       X <- cbind(X, data[, rownames(voteClass)[idx]])
       Y <- c(Y, label[rownames(voteClass)[idx]])
     }
-    #print(i)
   }
   
   return(model)
 }
 
-
-
 # PCA for dimension reduction
+# multi = TRUE - bagging
 library(gmodels)
 matPCs <- function(data, top, seed=1, multi=FALSE) {
   # genes are rows, cells are cols
@@ -53,39 +51,54 @@ matPCs <- function(data, top, seed=1, multi=FALSE) {
   } else {
     #pcs <- t(prcomp(data, center = TRUE, scale. = TRUE)$rotation[,1:top])
     pcs <- t(fast.prcomp(data, center = TRUE, scale. = TRUE)$rotation[,1:top])
-    
   }  
 }
+
 library(splatter)
 #### Alternatively, parameters can be set from scratch
+
 set.seed(1)
 x <- 3
-params <- newSplatParams(batchCells=x*50, group.prob = rep(1/x, time=x))
-params <- setParams(params, de.prob=0.15)
-sim.groups <- splatSimulate(params, method = "groups", verbose = FALSE)
-plotPCA(sim.groups, colour_by = "Group", exprs_values = "counts")
-dim(counts(sim.groups))
 
+de.prob_min = 0.12
+de.prob_max = 0.17
+de.prob_inc = 0.01
 
-sim.data <- log2(counts(sim.groups)+1)
-cls.truth <- colData(sim.groups)[,"Group"]
+stats_to_capture = c("de.prob","binom","ARI.model.mean","ARI.model.sd","ARI.truth")
+recorder <-data.frame(matrix(ncol=length(stats_to_capture),nrow=0))
+colnames(recorder) <- stats_to_capture
 
-### simulation for clustering and classification
-#genes <- selectGenes(sim.data, cls.noisy, top=100)
-#sim.selected <- sim.data[genes,]
-sim.selected <- matPCs(sim.data, 10)
-
-set.seed(2)
-clust <- Kmeans(t(sim.selected), centers=3, method="pearson", iter.max = 50)
-initCls <- clust$cluster
-adjustedRandIndex(cls.truth, initCls)
-
-ARI <- c()
-for(i in 1:10) {
-  model <- scAdaSampling(sim.selected, initCls, seed=i)
-  final <- predict(model, newdata=t(sim.selected), type="response")
-  ARI <- c(ARI, adjustedRandIndex(cls.truth, final)) # after AdaSampling
-  print(i)
+for (de.prob_val in seq(de.prob_min,de.prob_max,de.prob_inc)){
+  print(c("de.prob=",de.prob_val))
+  params <- newSplatParams(batchCells=x*50, group.prob = rep(1/x, time=x))
+  params <- setParams(params, de.prob=de.prob_val)
+  sim.groups <- splatSimulate(params, method = "groups", verbose = FALSE)
+  plotPCA(sim.groups, colour_by = "Group", exprs_values = "counts")
+  dim(counts(sim.groups))
+  
+  sim.data <- log2(counts(sim.groups)+1)
+  cls.truth <- colData(sim.groups)[,"Group"]
+  sim.selected <- matPCs(sim.data, 10)
+  
+  set.seed(2)
+  clust <- Kmeans(t(sim.selected), centers=3, method="pearson", iter.max = 50)
+  initCls <- clust$cluster
+  adjustedRandIndex(cls.truth, initCls)
+  
+  ARI <- c()
+  for(i in 1:10) {
+    model <- scAdaSampling(sim.selected, initCls, seed=i)
+    final <- predict(model, newdata=t(sim.selected), type="response")
+    ARI <- c(ARI, adjustedRandIndex(cls.truth, final)) # after AdaSampling
+  }
+  binom = binom.test(sum(ARI>adjustedRandIndex(cls.truth, initCls)), length(ARI), alternative = "greater")
+  row <- data.frame("de.prob" = de.prob_val,
+                    "binom" = binom$estimate,
+                    "ARI.model.mean" = mean(ARI),
+                    "ARI.model.sd" = sd(ARI),
+                    "ARI.truth" = adjustedRandIndex(cls.truth, initCls),
+                    row.names=NULL)
+  recorder <- rbind(recorder,row)
 }
-ARI
-binom.test(sum(ARI>adjustedRandIndex(cls.truth, initCls)), length(ARI), alternative = "greater")
+#write.csv(recorder,paste("./code/",format(Sys.time(), "%Y%m%d-%H%M%S"),"rf",".csv",sep=""))
+
