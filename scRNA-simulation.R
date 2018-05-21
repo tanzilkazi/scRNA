@@ -87,11 +87,11 @@ recorder <-data.frame(matrix(ncol=6,nrow=0))
 colnames(recorder) <- c("ntree","mtry","ARI.model.mean","ARI.model.sd","ARI.truth","binom")
 
 ntree_min = 50
-ntree_max = 1000
-ntree_inc = 50
+ntree_max = 550
+ntree_inc = 200
 
 num_features = dim(sim.selected)[1]
-mtry_list = round(c(0.5*sqrt(num_features),sqrt(num_features),2*sqrt(num_features)))
+mtry_list = 6# round(c(0.5*sqrt(num_features),sqrt(num_features),2*sqrt(num_features)))
 
 for (mtry_val in mtry_list){
     for (ntree in seq(ntree_min,ntree_max,ntree_inc)) {
@@ -114,4 +114,4 @@ for (mtry_val in mtry_list){
     }
 }
 
-write.csv(recorder,paste(format(Sys.time(), "%H%M%S"),"rf",".csv",sep=""))
+write.csv(recorder,paste("./code/",format(Sys.time(), "%H%M%S"),"rf",".csv",sep=""))
