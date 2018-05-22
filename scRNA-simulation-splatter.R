@@ -62,10 +62,10 @@ set.seed(1)
 num_groups <- 2
 
 de.prob_min = 0.01
-de.prob_max = 0.16
-de.prob_inc = 0.01
+de.prob_max = 0.06
+de.prob_inc = 0.002
 
-stats_to_capture = c("de.prob","binom","ARI.model.mean","ARI.model.sd","ARI.Cluster","Ratio")
+stats_to_capture = c("de.prob","binom","ARI.model.mean","ARI.model.sd","ARI.Cluster","Improvement")
 recorder <-data.frame(matrix(ncol=length(stats_to_capture),nrow=0))
 colnames(recorder) <- stats_to_capture
 plots <- c()
@@ -86,8 +86,7 @@ for (de.prob_val in de.prob_range){
   set.seed(2)
   clust <- Kmeans(t(sim.selected), centers=3, method="pearson", iter.max = 50)
   initCls <- clust$cluster
-  #adjustedRandIndex(cls.truth, initCls)
-  
+
   ARI <- c()
   for(i in 1:10) {
     model <- scAdaSampling(sim.selected, initCls, seed=i)
@@ -101,7 +100,7 @@ for (de.prob_val in de.prob_range){
                     "ARI.model.mean" = format(round(mean(ARI),3)),
                     "ARI.model.sd" = format(round(sd(ARI),3)),
                     "ARI.Cluster" = format(round(ARI_cluster,3)),
-                    "Ratio" = format(round(mean(ARI)/ARI_cluster,3)),
+                    "Improvement" = format(round((mean(ARI)-ARI_cluster)*100/ARI_cluster,3)),
                     row.names=NULL)
   recorder <- rbind(recorder,row)
   cat("de.prob=",de.prob_val,"\tCluster=",format(round(adjustedRandIndex(cls.truth, initCls),3)),"\tARI=",format(round(ARI,3)),"\n")
@@ -124,7 +123,9 @@ nCol <- floor(sqrt(length(grob_list)))
 all_plots <- grid.arrange(grobs=grob_list,ncol=nCol,legend)
 
 recorder
+plot(all_plots)
 
-#ggsave(paste("./code/",format(Sys.time(), "%Y%m%d-%H%M%S"),"plots",".png"),plot=all_plots)
-#write.csv(recorder,paste("./code/",format(Sys.time(), "%Y%m%d-%H%M%S"),"rf",".csv",sep=""))
+save_string <- paste(format(Sys.time(),"%Y%m%d-%H%M%S"),"_G",num_groups,sep="")
+ggsave(paste("./code/",save_string,"_plots",".png",sep=""),plot=all_plots)
+write.csv(recorder,paste("./code/",save_string,"_perf",".csv",sep=""))
 
