@@ -2,10 +2,13 @@
 # contains: Part 1. simulation
 #           Part 2. realworld data
 
-setwd("C:/Users/kazit/Documents/USyd/COMP5703 - Capstone")
+setwd("C:/Users/kazit/Documents/USyd/COMP5703-Capstone")
 library(amap)
 library(mclust)
 library(randomForest)
+library(lemon)
+suppressWarnings(options(warn=-1))
+
 
 scAdaSampling <- function(data, label, seed) {
   set.seed(seed)
@@ -41,9 +44,8 @@ matPCs <- function(data, top, seed=1, multi=FALSE) {
     set.seed(seed)
     n <- round(top / 5)
     size <- round(nrow(data) / 10)
-    
-    
-    for (i in 1:5) {
+   
+     for (i in 1:5) {
       subData <-data[sample(1:nrow(data), size),]
       pcs <- cbind(pcs, fast.prcomp(subData, center = TRUE, scale. = TRUE)$rotation[,1:n])
     }
@@ -60,20 +62,22 @@ library(splatter)
 set.seed(1)
 x <- 3
 
-de.prob_min = 0.12
-de.prob_max = 0.17
+de.prob_min = 0.14
+de.prob_max = 0.15
 de.prob_inc = 0.01
 
 stats_to_capture = c("de.prob","binom","ARI.model.mean","ARI.model.sd","ARI.truth")
 recorder <-data.frame(matrix(ncol=length(stats_to_capture),nrow=0))
 colnames(recorder) <- stats_to_capture
+plots <- c()
+de.prob_range <- seq(de.prob_min,de.prob_max,de.prob_inc)
 
-for (de.prob_val in seq(de.prob_min,de.prob_max,de.prob_inc)){
+for (de.prob_val in de.prob_range){
   print(c("de.prob=",de.prob_val))
   params <- newSplatParams(batchCells=x*50, group.prob = rep(1/x, time=x))
   params <- setParams(params, de.prob=de.prob_val)
   sim.groups <- splatSimulate(params, method = "groups", verbose = FALSE)
-  plotPCA(sim.groups, colour_by = "Group", exprs_values = "counts")
+  plots<- c(plots,plotPCA(sim.groups, colour_by = "Group", exprs_values = "counts")[1])
   dim(counts(sim.groups))
   
   sim.data <- log2(counts(sim.groups)+1)
@@ -100,5 +104,23 @@ for (de.prob_val in seq(de.prob_min,de.prob_max,de.prob_inc)){
                     row.names=NULL)
   recorder <- rbind(recorder,row)
 }
+
+index=1
+grob_list=list()
+for (plott in plots){
+  if (index == 1){
+    temp <- qplot(PC1, PC2, data = data.frame(plott), colour = colour_by)+ ggtitle(de.prob_range[index])+ theme(legend.position="bottom")
+    grob_list[[index]] <- temp
+    legend <- get_legend(grob_list[[index]])
+  }else{
+    temp <- qplot(PC1, PC2, data = data.frame(plott), colour = colour_by)+ ggtitle(de.prob_range[index])+ theme(legend.position="none")
+    grob_list[[index]] <- temp
+  }
+  index = index + 1
+}
+nCol <- floor(sqrt(length(grob_list)))
+do.call("grid.arrange", c(grob_list, ncol=nCol))
+
+
 #write.csv(recorder,paste("./code/",format(Sys.time(), "%Y%m%d-%H%M%S"),"rf",".csv",sep=""))
 
