@@ -9,7 +9,6 @@ library(randomForest)
 library(lemon)
 suppressWarnings(options(warn=-1))
 
-
 scAdaSampling <- function(data, label, seed) {
   set.seed(seed)
   X <- data
@@ -60,21 +59,21 @@ library(splatter)
 #### Alternatively, parameters can be set from scratch
 
 set.seed(1)
-x <- 3
+num_groups <- 2
 
-de.prob_min = 0.14
-de.prob_max = 0.15
+de.prob_min = 0.01
+de.prob_max = 0.16
 de.prob_inc = 0.01
 
-stats_to_capture = c("de.prob","binom","ARI.model.mean","ARI.model.sd","ARI.truth")
+stats_to_capture = c("de.prob","binom","ARI.model.mean","ARI.model.sd","ARI.Cluster","Ratio")
 recorder <-data.frame(matrix(ncol=length(stats_to_capture),nrow=0))
 colnames(recorder) <- stats_to_capture
 plots <- c()
 de.prob_range <- seq(de.prob_min,de.prob_max,de.prob_inc)
 
 for (de.prob_val in de.prob_range){
-  print(c("de.prob=",de.prob_val))
-  params <- newSplatParams(batchCells=x*50, group.prob = rep(1/x, time=x))
+
+  params <- newSplatParams(batchCells=num_groups*50, group.prob = rep(1/num_groups, time=num_groups))
   params <- setParams(params, de.prob=de.prob_val)
   sim.groups <- splatSimulate(params, method = "groups", verbose = FALSE)
   plots<- c(plots,plotPCA(sim.groups, colour_by = "Group", exprs_values = "counts")[1])
@@ -87,7 +86,7 @@ for (de.prob_val in de.prob_range){
   set.seed(2)
   clust <- Kmeans(t(sim.selected), centers=3, method="pearson", iter.max = 50)
   initCls <- clust$cluster
-  adjustedRandIndex(cls.truth, initCls)
+  #adjustedRandIndex(cls.truth, initCls)
   
   ARI <- c()
   for(i in 1:10) {
@@ -95,32 +94,37 @@ for (de.prob_val in de.prob_range){
     final <- predict(model, newdata=t(sim.selected), type="response")
     ARI <- c(ARI, adjustedRandIndex(cls.truth, final)) # after AdaSampling
   }
-  binom = binom.test(sum(ARI>adjustedRandIndex(cls.truth, initCls)), length(ARI), alternative = "greater")
+  ARI_cluster = adjustedRandIndex(cls.truth, initCls)
+  binom = binom.test(sum(ARI>ARI_cluster), length(ARI), alternative = "greater")
   row <- data.frame("de.prob" = de.prob_val,
                     "binom" = binom$estimate,
-                    "ARI.model.mean" = mean(ARI),
-                    "ARI.model.sd" = sd(ARI),
-                    "ARI.truth" = adjustedRandIndex(cls.truth, initCls),
+                    "ARI.model.mean" = format(round(mean(ARI),3)),
+                    "ARI.model.sd" = format(round(sd(ARI),3)),
+                    "ARI.Cluster" = format(round(ARI_cluster,3)),
+                    "Ratio" = format(round(mean(ARI)/ARI_cluster,3)),
                     row.names=NULL)
   recorder <- rbind(recorder,row)
+  cat("de.prob=",de.prob_val,"\tCluster=",format(round(adjustedRandIndex(cls.truth, initCls),3)),"\tARI=",format(round(ARI,3)),"\n")
 }
 
 index=1
 grob_list=list()
 for (plott in plots){
   if (index == 1){
-    temp <- qplot(PC1, PC2, data = data.frame(plott), colour = colour_by)+ ggtitle(de.prob_range[index])+ theme(legend.position="bottom")
+    legend <- get_legend(qplot(PC1, PC2, data = data.frame(plott), colour = colour_by)+ ggtitle(de.prob_range[index])+ theme(legend.position='bottom'))
+    temp <- qplot(PC1, PC2, data = data.frame(plott), colour = colour_by)+ ggtitle(de.prob_range[index])+ theme(legend.position='hidden') + theme(text=element_text(size=8),axis.text=element_text(size=8),plot.title=element_text(size=12))
     grob_list[[index]] <- temp
-    legend <- get_legend(grob_list[[index]])
-  }else{
-    temp <- qplot(PC1, PC2, data = data.frame(plott), colour = colour_by)+ ggtitle(de.prob_range[index])+ theme(legend.position="none")
+    }else{
+    temp <- qplot(PC1, PC2, data = data.frame(plott), colour = colour_by)+ ggtitle(de.prob_range[index])+ theme(legend.position='hidden') + theme(text=element_text(size=8),axis.text=element_text(size=8),plot.title=element_text(size=12))
     grob_list[[index]] <- temp
   }
   index = index + 1
 }
 nCol <- floor(sqrt(length(grob_list)))
-do.call("grid.arrange", c(grob_list, ncol=nCol))
+all_plots <- grid.arrange(grobs=grob_list,ncol=nCol,legend)
 
+recorder
 
+#ggsave(paste("./code/",format(Sys.time(), "%Y%m%d-%H%M%S"),"plots",".png"),plot=all_plots)
 #write.csv(recorder,paste("./code/",format(Sys.time(), "%Y%m%d-%H%M%S"),"rf",".csv",sep=""))
 
