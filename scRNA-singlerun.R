@@ -57,6 +57,7 @@ matPCs <- function(data, top, seed=1, multi=FALSE) {
     
   }  
 }
+
 library(splatter)
 #### Alternatively, parameters can be set from scratch
 set.seed(1)
@@ -64,29 +65,32 @@ x <- 3
 params <- newSplatParams(batchCells=x*50, group.prob = rep(1/x, time=x))
 plots <- c()
 
-params <- setParams(params, de.prob=y)
-sim.groups <- splatSimulate(params, method = "groups", verbose = FALSE)
+for (y in c(0.11,0.12,0.13,0.14)){
+  params <- setParams(params, de.prob=y)
+  sim.groups <- splatSimulate(params, method = "groups", verbose = FALSE)
+  
 
-
-plots <- c(plots, plotPCA(sim.groups, colour_by = "Group", exprs_values = "counts")[1])
-dim(counts(sim.groups))
-
-
-sim.data <- log2(counts(sim.groups)+1)
-cls.truth <- colData(sim.groups)[,"Group"]
-
-sim.selected <- matPCs(sim.data, 10)
-
-set.seed(2)
-clust <- Kmeans(t(sim.selected), centers=3, method="pearson", iter.max = 50)
-initCls <- clust$cluster
-adjustedRandIndex(cls.truth, initCls)
-
-ARI <- c()
-for(i in 1:10) {
-  model <- scAdaSampling(sim.selected, initCls, seed=i)
-  final <- predict(model, newdata=t(sim.selected), type="response")
-  ARI <- c(ARI, adjustedRandIndex(cls.truth, final)) # after AdaSampling
+  plots <- c(plots, plotPCA(sim.groups, colour_by = "Group", exprs_values = "counts")[1])
+  dim(counts(sim.groups))
 }
-ARI
-binom.test(sum(ARI>adjustedRandIndex(cls.truth, initCls)), length(ARI), alternative = "greater")
+
+grid.arrange(plots)
+
+# sim.data <- log2(counts(sim.groups)+1)
+# cls.truth <- colData(sim.groups)[,"Group"]
+# 
+# sim.selected <- matPCs(sim.data, 10)
+# 
+# set.seed(2)
+# clust <- Kmeans(t(sim.selected), centers=3, method="pearson", iter.max = 50)
+# initCls <- clust$cluster
+# adjustedRandIndex(cls.truth, initCls)
+# 
+# ARI <- c()
+# for(i in 1:10) {
+#   model <- scAdaSampling(sim.selected, initCls, seed=i)
+#   final <- predict(model, newdata=t(sim.selected), type="response")
+#   ARI <- c(ARI, adjustedRandIndex(cls.truth, final)) # after AdaSampling
+# }
+# ARI
+# binom.test(sum(ARI>adjustedRandIndex(cls.truth, initCls)), length(ARI), alternative = "greater")
