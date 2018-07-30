@@ -2,7 +2,7 @@
 # contains: Part 1. simulation
 #           Part 2. realworld data
 
-# check mislabelling if occuring
+# don't check mislabelling if occuring
 # increase number of iterations
 # perform binom 
 # check the variances of the differences or improvements
