@@ -6,6 +6,7 @@
 # increase number of iterations
 # perform binom 
 # check the variances of the differences or improvements
+# tz branch test
 
 setwd("C:/Users/kazit/Documents/USyd/COMP5703-Capstone")
 library(amap)
