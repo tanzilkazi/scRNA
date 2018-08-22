@@ -22,7 +22,7 @@ library(lemon)
 library(cowplot)
 library(ggplot2)
 library(gridExtra)
-
+library(stats)
 suppressWarnings(options(warn=-1))
 
 
@@ -171,7 +171,7 @@ for(i in 1:ncol(softclass_df)){
 # 
 # ar_ARI_Ada
 # ar_ARI_clu
-
+initCls
 ```
 
 
@@ -184,7 +184,7 @@ for (num_groups in num.groups_range){
     params <- newSplatParams(batchCells=num_groups*50, group.prob = rep(1/num_groups, time=num_groups))
     params <- setParams(params, de.prob=de.prob_val)
     sim.groups <- splatSimulate(params, method = "groups", verbose = FALSE)
-        dim(counts(sim.groups))
+   dim(counts(sim.groups))
     
     sim.data <- log2(counts(sim.groups)+1)
     cls.truth <- colData(sim.groups)[,"Group"]
@@ -227,5 +227,8 @@ for (num_groups in num.groups_range){
   }
 }
 
-recorder
+a<-as.numeric(as.character(recorder$ARI.cluster.mean)) # convert column in dataframe to list of simple arrays. factors are creaated if column created directly from dataframe
+b<-as.numeric(as.character(recorder$ARI.Ada.mean))
+
+t.test(a,b,alternative="less",paired=TRUE)
 ```
