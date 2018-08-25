@@ -7,11 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r} 
 
@@ -26,8 +22,6 @@ library(stats)
 library(splatter)
 
 suppressWarnings(options(warn=-1))
-
-
 
 ```
 
@@ -91,31 +85,27 @@ matPCs <- function(data, top, seed=1, multi=FALSE) {
 
 #loading splatter and setting parameters
 
-```{r}
-#### Alternatively, parameters can be set from scratch
+# ```{r}
+# #### Alternatively, parameters can be set from scratch
+# 
+# set.seed(1)
+# 
+# de.prob_min = 0
+# de.prob_max = 1
+# de.prob_inc = 0.2
+# 
+# num.groups_min = 2
+# num.groups_max = 3
+# num.groups_inc = 1
+# 
+# stats_to_capture = c("de.prob","num.groups","ARI.cluster.mean","ARI.cluster.sd","ARI.Ada.mean","ARI.Ada.sd")
+# recorder <-data.frame(matrix(ncol=length(stats_to_capture),nrow=0))
+# colnames(recorder) <- stats_to_capture
+# de.prob_range <- seq(de.prob_min,de.prob_max,de.prob_inc)
+# num.groups_range <- seq(num.groups_min,num.groups_max,num.groups_inc)
+#```
 
-set.seed(1)
-num_groups <- 3
-
-de.prob_min = 0.05
-de.prob_max = 0.95
-de.prob_inc = 0.05
-
-num.groups_min = 2
-num.groups_max = 4
-num.groups_inc = 1
-
-stats_to_capture = c("de.prob","num.groups","ARI.cluster.mean","ARI.cluster.sd","ARI.Ada.mean","ARI.Ada.sd")
-recorder <-data.frame(matrix(ncol=length(stats_to_capture),nrow=0))
-colnames(recorder) <- stats_to_capture
-plots <- c()
-de.prob_range <- seq(de.prob_min,de.prob_max,de.prob_inc)
-num.groups_range <- seq(num.groups_min,num.groups_max,num.groups_inc)
-
-```
-
-
-#simulate and kmeans with fixed parameters
+Simulate and kmeans with fixed parameters
 ```{r}
 set.seed(2)
 num_groups <- 3
@@ -157,35 +147,36 @@ for(i in 1:ncol(softclass_df)){
   
 }
 
-# for (i in 1:10) {
-#       
-#     
-#       model <- scAdaSampling(sim.selected, initCls, seed=i)
-#       final <- predict(model, newdata=t(sim.selected), type="response")
-#       
-#       #cat(i, "ada:", table(final==cls.truth), "clus", table(initCls==cls.truth),"\n")
-#       
-#       ar_ARI_Ada <- c(ar_ARI_Ada,adjustedRandIndex(cls.truth, final)) # after AdaSampling
-#       ar_ARI_clu <- c(ar_ARI_clu,adjustedRandIndex(cls.truth, initCls)) # initial cluster softlabeling
-#       #binom = binom.test(sum(ARI_AS>ARI_cluster), length(ARI_AS), alternative = "greater")
-#     }
-# 
-# ar_ARI_Ada
-# ar_ARI_clu
 initCls
 ```
 
 
-#multi-simulation with different parameters
+#multi-simulation with different parameters 
 ```{r}
+
+set.seed(1)
+
+de.prob_min = 0
+de.prob_max = 1
+de.prob_inc = 0.2
+
+num.groups_min = 2
+num.groups_max = 3
+num.groups_inc = 1
+
+stats_to_capture = c("de.prob","num.groups","ARI.cluster.mean","ARI.cluster.sd","ARI.Ada.mean","ARI.Ada.sd")
+recorder <-data.frame(matrix(ncol=length(stats_to_capture),nrow=0))
+colnames(recorder) <- stats_to_capture
+de.prob_range <- seq(de.prob_min,de.prob_max,de.prob_inc)
+num.groups_range <- seq(num.groups_min,num.groups_max,num.groups_inc)
+
 for (num_groups in num.groups_range){
   for (de.prob_val in de.prob_range){
-    #de.prob_val <- 0.5
     set.seed(2)
     params <- newSplatParams(batchCells=num_groups*50, group.prob = rep(1/num_groups, time=num_groups))
     params <- setParams(params, de.prob=de.prob_val)
     sim.groups <- splatSimulate(params, method = "groups", verbose = FALSE)
-   dim(counts(sim.groups))
+    dim(counts(sim.groups))
     
     sim.data <- log2(counts(sim.groups)+1)
     cls.truth <- colData(sim.groups)[,"Group"]
@@ -196,13 +187,10 @@ for (num_groups in num.groups_range){
     ar_ARI_Ada <- c()
     ar_ARI_clu <- c()
     
-    
     clust <- Kmeans(t(sim.selected), centers=num_groups, method="pearson", iter.max = 50)
     initCls <- clust$cluster
-    
+
     for (i in 1:10) {
-      
-    
       model <- scAdaSampling(sim.selected, initCls, seed=i)
       final <- predict(model, newdata=t(sim.selected), type="response")
       
@@ -212,10 +200,7 @@ for (num_groups in num.groups_range){
       ar_ARI_clu <- c(ar_ARI_clu,adjustedRandIndex(cls.truth, initCls)) # initial cluster softlabeling
       #binom = binom.test(sum(ARI_AS>ARI_cluster), length(ARI_AS), alternative = "greater")
     }
-    
-    #print(ar_ARI_Ada)
-    #print(ar_ARI_clu)
-    
+
     row <- data.frame("de.prob" = de.prob_val,
                       "num.groups" = num_groups,
                       "ARI.cluster.mean" = format(round(mean(ar_ARI_clu),3)),
@@ -228,10 +213,10 @@ for (num_groups in num.groups_range){
   }
 }
 
-a<-as.numeric(as.character(recorder$ARI.cluster.mean)) # convert column in dataframe to list of simple arrays. factors are creaated if column created directly from dataframe
-b<-as.numeric(as.character(recorder$ARI.Ada.mean))
+clu<-as.numeric(as.character(recorder$ARI.cluster.mean)) # convert column in dataframe to list of simple arrays. factors are creaated if column created directly from dataframe
+ada<-as.numeric(as.character(recorder$ARI.Ada.mean))
 
-t.test(a,b,alternative="less",paired=TRUE)
+t.test(clu,ada,alternative="less",paired=TRUE)
 ```
 
 
@@ -240,8 +225,8 @@ t.test(a,b,alternative="less",paired=TRUE)
 ```{r}
 set.seed(3)
 n_groups <- 2
-params <- newSplatParams(batchCells=num_groups*1000, group.prob = rep(1/num_groups, time=num_groups))
-params <- setParams(params, de.prob=0,nGenes=2)
+params <- newSplatParams(batchCells=n_groups*1000, group.prob = rep(1/n_groups, time=n_groups))
+params <- setParams(params, de.prob=1,nGenes=2)
 groups <- splatSimulate(params, method ="groups", verbose = FALSE)
 dim(counts(groups))
 
@@ -253,26 +238,3 @@ pl
 ```
 
 
-```{r}
-library(plotly)
-library(gganimate)
-#install.packages("devtools")
-#devtools::install_github('thomasp85/gganimate')
-
-set.seed(3)
-n_groups <- 2
-cells_per_group <- 10
-all_data <- c()
-for (de.prob.val in seq(0.8,1,0.1)){
-  params <- newSplatParams(batchCells=num_groups*cells_per_group, group.prob = rep(1/num_groups, time=num_groups))
-  params <- setParams(params, de.prob=de.prob.val,nGenes=2)
-  groups <- splatSimulate(params, method ="groups", verbose = FALSE)
-  graph_data <- log2(counts(groups)+1)
-  all_data <-rbind(all_data,data.frame(t(graph_data),de.prob.val))
-}
-pl <- ggplot(all_data,aes(x=all_data$Gene1, y=all_data$Gene2)) + geom_point(aes(col=groups$Group,frame=de.prob.val))
-ani.options(interval = 0.06) #animation speed, seconds per frame
-gganimate(pl, title_frame = FALSE)
-
-pl
-```
