@@ -28,10 +28,10 @@ matPCs <- function(data, top, seed=1, multi=FALSE) {
   }  
 }
 
-num_groups=7
+num_groups=4
 de.prob_val = 0.5
-
-params <- newSplatParams(batchCells=num_groups*50, group.prob = rep(1/num_groups, time=num_groups))
+sim.groups<-c()
+params <- newSplatParams(batchCells=num_groups*250, group.prob = rep(1/num_groups, time=num_groups),nGenes=100)
 params <- setParams(params, de.prob=de.prob_val)
 sim.groups <- splatSimulate(params, method = "groups", verbose = FALSE)
 dim(counts(sim.groups))
@@ -41,7 +41,6 @@ cls.truth <- colData(sim.groups)[,"Group"]
 cls.truth <- strtoi(substr(cls.truth,nchar(cls.truth),nchar(cls.truth)))
 
 sim.selected <- matPCs(sim.data, 3)
-graph_data <-data.frame(t(sim.selected))
 
 # 2D plot
 # pl <- ggplot(graph_data,aes(x=graph_data$PC1, y=graph_data$PC2)) + geom_point(aes(col=sim.groups$Group))
@@ -51,9 +50,8 @@ graph_data <-data.frame(t(sim.selected))
 
 library(plotly)
 
-mtcars$am[which(mtcars$am == 0)] <- 'Automatic'
-mtcars$am[which(mtcars$am == 1)] <- 'Manual'
-mtcars$am <- as.factor(mtcars$am)
+
+graph_data <-data.frame(t(sim.selected))
 
 p <- plot_ly(graph_data, x =graph_data$PC1, y =graph_data$PC2, z =graph_data$PC3, color = sim.groups$Group) %>%
   add_markers() %>%

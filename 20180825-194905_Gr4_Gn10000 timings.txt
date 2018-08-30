@@ -1,0 +1,60 @@
+Data simulation done... 			 10.38262 
+PCA done... 			 55.39019 
+kmeans done... 			 0.02007699 
+AdaSampling and prediction done... 			 21.16727 
+		de.prob= 0 	num.groups= 3 	Cluster= 0.001 +- 0 	Ada= 0.001 +- 0 
+Data simulation done... 			 10.58316 
+PCA done... 			 1.004001 
+kmeans done... 			 0.004000902 
+AdaSampling and prediction done... 			 16.01557 
+		de.prob= 0.2 	num.groups= 3 	Cluster= 1 +- 0 	Ada= 0.999 +- 0.004 
+Data simulation done... 			 11.6399 
+PCA done... 			 56.61047 
+kmeans done... 			 0.005011797 
+AdaSampling and prediction done... 			 16.67632 
+		de.prob= 0.4 	num.groups= 3 	Cluster= 0.948 +- 0 	Ada= 0.943 +- 0.003 
+Data simulation done... 			 10.24828 
+PCA done... 			 58.48846 
+kmeans done... 			 0.005016088 
+AdaSampling and prediction done... 			 17.50249 
+		de.prob= 0.6 	num.groups= 3 	Cluster= 0.959 +- 0 	Ada= 0.956 +- 0.002 
+Data simulation done... 			 10.84486 
+PCA done... 			 56.93129 
+kmeans done... 			 0.0020051 
+AdaSampling and prediction done... 			 15.68268 
+		de.prob= 0.8 	num.groups= 3 	Cluster= 1 +- 0 	Ada= 1 +- 0 
+Data simulation done... 			 10.31441 
+PCA done... 			 55.21572 
+kmeans done... 			 0.002002954 
+AdaSampling and prediction done... 			 19.7184 
+		de.prob= 1 	num.groups= 3 	Cluster= 1 +- 0 	Ada= 1 +- 0 
+Data simulation done... 			 16.11584 
+PCA done... 			 1.666841 
+kmeans done... 			 0.01701713 
+AdaSampling and prediction done... 			 22.62915 
+		de.prob= 0 	num.groups= 4 	Cluster= -0.001 +- 0 	Ada= -0.001 +- 0 
+Data simulation done... 			 15.00588 
+PCA done... 			 1.639123 
+kmeans done... 			 0.009022951 
+AdaSampling and prediction done... 			 23.95567 
+		de.prob= 0.2 	num.groups= 4 	Cluster= 0.637 +- 0 	Ada= 0.637 +- 0 
+Data simulation done... 			 12.76493 
+PCA done... 			 1.693836 
+kmeans done... 			 0.009989977 
+AdaSampling and prediction done... 			 24.06596 
+		de.prob= 0.4 	num.groups= 4 	Cluster= 0.642 +- 0 	Ada= 0.643 +- 0.001 
+Data simulation done... 			 13.91 
+PCA done... 			 1.600535 
+kmeans done... 			 0.008020163 
+AdaSampling and prediction done... 			 23.21272 
+		de.prob= 0.6 	num.groups= 4 	Cluster= 0.803 +- 0 	Ada= 0.802 +- 0.002 
+Data simulation done... 			 13.95111 
+PCA done... 			 1.557506 
+kmeans done... 			 0.01403809 
+AdaSampling and prediction done... 			 23.71804 
+		de.prob= 0.8 	num.groups= 4 	Cluster= 0.8 +- 0 	Ada= 0.793 +- 0.004 
+Data simulation done... 			 11.96781 
+PCA done... 			 1.546377 
+kmeans done... 			 0.005044937 
+AdaSampling and prediction done... 			 25.18292 
+		de.prob= 1 	num.groups= 4 	Cluster= 0.997 +- 0 	Ada= 0.997 +- 0 
